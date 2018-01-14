@@ -9,6 +9,7 @@ from selenium.common.exceptions import TimeoutException
 from Enum.direction import Direction
 from Game import Game
 
+import time
 import random
 
 game = Game()
@@ -30,7 +31,7 @@ def play():
 
     game.update()
     print(game.board)
-    game.replay()
 
-while True:
-    play()
+# while True:
+#     play()
+play()
