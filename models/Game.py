@@ -1,13 +1,12 @@
-from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-
-from Enum.direction import Direction
-
 import time
+
+from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+from models.enum.direction import Direction
+
 
 class Game():
 
@@ -43,7 +42,7 @@ class Game():
     def move(self, direction):
         '''
         Move in the direction stated. Small delay at the end before updating
-        :param direction: UP, DOWN, LEFT, RIGHT(Direction Enum)
+        :param direction: UP, DOWN, LEFT, RIGHT(Direction enum)
         :return:
         '''
 
