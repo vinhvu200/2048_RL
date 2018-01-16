@@ -4,6 +4,9 @@ from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
 
 from models.enum.direction import Direction
 
@@ -14,7 +17,7 @@ class Game():
 
         # IMPORTANT.. Test delay to see if results are being
         # recorded correctly
-        self.delay = 0.02
+        self.delay = 0.025
 
         # state is a list of all the values of each squares
         # and on_board blocks
@@ -98,6 +101,10 @@ class Game():
         replay = self.browser.find_element(By.XPATH, self.try_again_xpath)
         replay.click()
 
+    def find_board(self, driver):
+        elements = self.browser.find_elements(By.XPATH, self.tile_container_xpath)
+        return elements
+
     def update(self):
         '''
         Update self.on_board and self.board
@@ -106,11 +113,11 @@ class Game():
         total_blocks = 0
         self.board = [0 for _ in range(16)]
 
-        # Get all element of the board
         elements = self.browser.find_elements(By.XPATH, self.tile_container_xpath)
 
         # Parse each element
         for e in elements:
+
             by_spaces = e.get_attribute('class').split(' ')
 
             # total block update

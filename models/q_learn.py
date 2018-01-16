@@ -1,7 +1,10 @@
 from models.estimator import Estimator
 from models.enum.direction import Direction
-import numpy as np
 
+
+import numpy as np
+import random
+import time
 
 class Q_Learn():
 
@@ -12,10 +15,18 @@ class Q_Learn():
         self.epsilon = epsilon
         self.estimator = Estimator(self.game.action_space,
                                    self.game.state)
+        self.estimator.load_data()
         self.direction_dict = [Direction.UP,
                                Direction.DOWN,
                                Direction.LEFT,
                                Direction.RIGHT]
+
+    def compare_states(self, s1, s2):
+
+        for i in range(len(s1)):
+            if s1[i] != s2[i]:
+                return False
+        return True
 
     def epsilon_greedy_policy(self, state):
 
@@ -32,7 +43,7 @@ class Q_Learn():
 
             state = self.game.state
 
-            for t in range(100):
+            for t in range(500):
 
                 # Select and take action
                 probs = self.epsilon_greedy_policy(state)
@@ -41,11 +52,26 @@ class Q_Learn():
                 action = self.direction_dict[action_index]
                 next_state, reward, done = self.game.move(action)
 
+                count = 0
+                while self.compare_states(state, next_state) is False and count < 100 and done is False:
+
+                    action_index = random.randint(0, self.game.action_space-1)
+                    action = self.direction_dict[action_index]
+                    next_state, reward, done = self.game.move(action)
+                    count += 1
+
                 # TD Update
                 td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
                 self.estimator.update(state, action_index, td_target)
 
-                if done:
+                if done is True:
+
+                    print('Saving data')
+                    self.estimator.save_data()
                     self.game.replay()
+                    time.sleep(1)
                     self.game.update()
+                    print('Episodes complete : {}\n'.format(e+1))
                     break
+
+                state = next_state
