@@ -2,6 +2,7 @@ import random
 
 from models.enum.direction import Direction
 from models.Game import Game
+from models.q_learn import Q_Learn
 
 game = Game()
 game.update()
@@ -19,10 +20,10 @@ def play():
             game.move(Direction.DOWN)
         if r is 4:
             game.move(Direction.UP)
+    game.replay()
 
-    game.update()
-    print(game.board)
-
-# while True:
-#     play()
-play()
+# episodes = 1
+# discount = 1.0
+# epsilon = 0.05
+# q = Q_Learn(game, episodes, discount, epsilon)
+# q.epsilon_greedy_policy(game.get_state())
