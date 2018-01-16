@@ -14,19 +14,36 @@ class Game():
 
         # IMPORTANT.. Test delay to see if results are being
         # recorded correctly
-        self.delay = 0.005
+        self.delay = 0.02
 
         self.url = 'https://gabrielecirulli.github.io/2048/'
         exec_path = '/Users/vinh/Desktop/chromedriver'
         self.tile_container_xpath = '/html/body/div/div[4]/div[3]/*'
         self.game_over_xpath = '/html/body/div/div[4]/div[1]'
         self.try_again_xpath = '/html/body/div/div[4]/div[1]/div/a[2]'
+        self.score_xpath = '/html/body/div/div[1]/div/div[1]'
+
+        self.last_score = 0
         self.rows = 4
         self.cols = 4
         self.board = [0 for _ in range(16)]
         self.on_board = 0
         self.browser = webdriver.Chrome(executable_path=exec_path)
         self.browser.get(self.url)
+        self.action_space = 4
+        self.state = []
+
+    def calc_reward(self):
+        '''
+        Calculate reward by getting current score and subtracting
+        by last score.
+
+        :return: reward (int)
+        '''
+        current_score = int(self.browser.find_element(By.XPATH, self.score_xpath).text)
+        reward = current_score - self.last_score
+        self.last_score = current_score
+        return reward
 
     def game_over(self):
         '''
@@ -38,6 +55,11 @@ class Game():
         if message == 'game-message game-over':
             return True
         return False
+
+    def get_state(self):
+        state = list(self.board)
+        state.append(self.on_board)
+        return state
 
     def move(self, direction):
         '''
@@ -59,6 +81,9 @@ class Game():
 
         action.perform()
         time.sleep(self.delay)
+        self.update()
+
+        return self.state, self.calc_reward(), self.game_over()
 
     def replay(self):
         '''
@@ -97,3 +122,4 @@ class Game():
             self.board[index] = num
 
         self.on_board = total_blocks
+        self.state = list(self.board).append(self.on_board)
