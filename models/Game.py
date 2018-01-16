@@ -17,7 +17,7 @@ class Game():
 
         # IMPORTANT.. Test delay to see if results are being
         # recorded correctly
-        self.delay = 0.025
+        self.delay = 0.01
 
         # state is a list of all the values of each squares
         # and on_board blocks

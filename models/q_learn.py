@@ -43,7 +43,7 @@ class Q_Learn():
 
             state = self.game.state
 
-            for t in range(500):
+            for t in range(10000):
 
                 # Select and take action
                 probs = self.epsilon_greedy_policy(state)
@@ -52,13 +52,10 @@ class Q_Learn():
                 action = self.direction_dict[action_index]
                 next_state, reward, done = self.game.move(action)
 
-                count = 0
-                while self.compare_states(state, next_state) is False and count < 100 and done is False:
-
-                    action_index = random.randint(0, self.game.action_space-1)
+                if self.compare_states(state, next_state):
+                    action_index = random.randint(0, self.game.action_space - 1)
                     action = self.direction_dict[action_index]
                     next_state, reward, done = self.game.move(action)
-                    count += 1
 
                 # TD Update
                 td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
@@ -71,7 +68,7 @@ class Q_Learn():
                     self.game.replay()
                     time.sleep(1)
                     self.game.update()
-                    print('Episodes complete : {}\n'.format(e+1))
+                    print('Episodes complete : {}\nSteps : {}'.format(e+1, t))
                     break
 
                 state = next_state
