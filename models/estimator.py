@@ -11,6 +11,7 @@ class Estimator():
         for _ in range(self.action_space):
 
             model = SGDRegressor(learning_rate='constant')
+
             model.partial_fit([init_state], [0])
             self.models.append(model)
 

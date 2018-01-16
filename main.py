@@ -22,8 +22,9 @@ def play():
             game.move(Direction.UP)
     game.replay()
 
-# episodes = 1
-# discount = 1.0
-# epsilon = 0.05
-# q = Q_Learn(game, episodes, discount, epsilon)
-# q.epsilon_greedy_policy(game.get_state())
+episodes = 1
+discount = 1.0
+epsilon = 0.05
+
+q = Q_Learn(game, episodes, discount, epsilon)
+q.learn()

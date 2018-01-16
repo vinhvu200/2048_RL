@@ -16,6 +16,10 @@ class Game():
         # recorded correctly
         self.delay = 0.02
 
+        # state is a list of all the values of each squares
+        # and on_board blocks
+        self.state = []
+
         self.url = 'https://gabrielecirulli.github.io/2048/'
         exec_path = '/Users/vinh/Desktop/chromedriver'
         self.tile_container_xpath = '/html/body/div/div[4]/div[3]/*'
@@ -24,23 +28,29 @@ class Game():
         self.score_xpath = '/html/body/div/div[1]/div/div[1]'
 
         self.last_score = 0
+        self.game_over_reward = -2048
         self.rows = 4
         self.cols = 4
         self.board = [0 for _ in range(16)]
         self.on_board = 0
+        self.action_space = 4
+
         self.browser = webdriver.Chrome(executable_path=exec_path)
         self.browser.get(self.url)
-        self.action_space = 4
-        self.state = []
 
     def calc_reward(self):
         '''
         Calculate reward by getting current score and subtracting
         by last score.
+        If the game is over, then reward is a negative value
 
         :return: reward (int)
         '''
-        current_score = int(self.browser.find_element(By.XPATH, self.score_xpath).text)
+        if self.game_over():
+            return self.game_over_reward
+
+        element = self.browser.find_element(By.XPATH, self.score_xpath).text
+        current_score = int(element.split('+')[0])
         reward = current_score - self.last_score
         self.last_score = current_score
         return reward
@@ -55,11 +65,6 @@ class Game():
         if message == 'game-message game-over':
             return True
         return False
-
-    def get_state(self):
-        state = list(self.board)
-        state.append(self.on_board)
-        return state
 
     def move(self, direction):
         '''
@@ -122,4 +127,5 @@ class Game():
             self.board[index] = num
 
         self.on_board = total_blocks
-        self.state = list(self.board).append(self.on_board)
+        self.state = list(self.board)
+        self.state.append(self.on_board)

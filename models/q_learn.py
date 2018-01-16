@@ -11,7 +11,7 @@ class Q_Learn():
         self.discount = discount
         self.epsilon = epsilon
         self.estimator = Estimator(self.game.action_space,
-                                   self.game.get_state())
+                                   self.game.state)
         self.direction_dict = [Direction.UP,
                                Direction.DOWN,
                                Direction.LEFT,
@@ -19,33 +19,31 @@ class Q_Learn():
 
     def epsilon_greedy_policy(self, state):
 
-        probs = np.ones(len(state)) * self.epsilon / self.game.action_space
+        probs = np.ones(self.game.action_space, dtype=float) * self.epsilon / self.game.action_space
         q_vals = self.estimator.predict(state)
         best_action = np.argmax(q_vals)
         probs[best_action] += (1.0 - self.epsilon)
-        return probs
 
-        # A = np.ones(nA, dtype=float) * epsilon / nA
-        # q_values = estimator.predict(observation)
-        # best_action = np.argmax(q_values)
-        # A[best_action] += (1.0 - epsilon)
-        # return A
+        return probs
 
     def learn(self):
 
-        for e in self.episodes():
+        for e in range(self.episodes):
 
-            state = self.game.get_state()
+            state = self.game.state
 
-            for t in xrange(1):
+            for t in range(100):
 
+                # Select and take action
                 probs = self.epsilon_greedy_policy(state)
-
-                index = np.random.choice(np.arange(len(state)),
+                action_index = np.random.choice(np.arange(self.game.action_space),
                                           p=probs)
-                action = self.direction_dict[index]
+                action = self.direction_dict[action_index]
+                next_state, reward, done = self.game.move(action)
 
-                new_state, done = self.game.move(action)
+                # TD Update
+                td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
+                self.estimator.update(state, action_index, td_target)
 
                 if done:
                     self.game.replay()
