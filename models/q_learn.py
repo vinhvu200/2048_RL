@@ -22,7 +22,6 @@ class Q_Learn():
                                Direction.RIGHT]
 
     def compare_states(self, s1, s2):
-
         for i in range(len(s1)):
             if s1[i] != s2[i]:
                 return False
@@ -50,25 +49,28 @@ class Q_Learn():
                 action_index = np.random.choice(np.arange(self.game.action_space),
                                           p=probs)
                 action = self.direction_dict[action_index]
-                next_state, reward, done = self.game.move(action)
+                next_state, reward, done, skip = self.game.move(action)
 
-                if self.compare_states(state, next_state):
+                if skip is False and self.compare_states(state, next_state) is True:
                     action_index = random.randint(0, self.game.action_space - 1)
                     action = self.direction_dict[action_index]
-                    next_state, reward, done = self.game.move(action)
+                    next_state, reward, done, skip = self.game.move(action)
 
                 # TD Update
                 td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
                 self.estimator.update(state, action_index, td_target)
 
-                if done is True:
+                if done is True or skip is True:
 
-                    print('Saving data')
-                    self.estimator.save_data()
+                    if skip is False:
+                        print('Saving data')
+                        self.estimator.save_data()
+                        print('Episodes complete : {}\nSteps : {}'.format(e + 1, t))
+                    else:
+                        self.estimator.load_data()
                     self.game.replay()
                     time.sleep(1)
                     self.game.update()
-                    print('Episodes complete : {}\nSteps : {}'.format(e+1, t))
                     break
 
                 state = next_state

@@ -17,7 +17,7 @@ class Game():
 
         # IMPORTANT.. Test delay to see if results are being
         # recorded correctly
-        self.delay = 0.01
+        self.delay = 0.015
 
         # state is a list of all the values of each squares
         # and on_board blocks
@@ -29,6 +29,7 @@ class Game():
         self.game_over_xpath = '/html/body/div/div[4]/div[1]'
         self.try_again_xpath = '/html/body/div/div[4]/div[1]/div/a[2]'
         self.score_xpath = '/html/body/div/div[1]/div/div[1]'
+        self.restart_xpath = '/html/body/div/div[2]/a'
 
         self.last_score = 0
         self.game_over_reward = -2048
@@ -89,17 +90,24 @@ class Game():
 
         action.perform()
         time.sleep(self.delay)
-        self.update()
 
-        return self.state, self.calc_reward(), self.game_over()
+        # this variable is in the case an exception has been encountered
+        # therefore, we should reset the game and reload the previous
+        # data
+        skip = self.update()
+
+        return self.state, self.calc_reward(), self.game_over(), skip
 
     def replay(self):
         '''
         Click replay to reset the game
         :return: None
         '''
-        replay = self.browser.find_element(By.XPATH, self.try_again_xpath)
-        replay.click()
+        # replay = self.browser.find_element(By.XPATH, self.try_again_xpath)
+        # replay.click()
+
+        restart = self.browser.find_element(By.XPATH, self.restart_xpath)
+        restart.click()
 
     def find_board(self, driver):
         elements = self.browser.find_elements(By.XPATH, self.tile_container_xpath)
@@ -118,7 +126,11 @@ class Game():
         # Parse each element
         for e in elements:
 
-            by_spaces = e.get_attribute('class').split(' ')
+            try:
+                by_spaces = e.get_attribute('class').split(' ')
+            except StaleElementReferenceException as e:
+                print('stale element')
+                return True
 
             # total block update
             if len(by_spaces) is 4 and by_spaces[3] == 'tile-merged':
@@ -136,3 +148,4 @@ class Game():
         self.on_board = total_blocks
         self.state = list(self.board)
         self.state.append(self.on_board)
+        return False
