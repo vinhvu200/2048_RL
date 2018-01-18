@@ -1,4 +1,5 @@
 import time
+import math
 
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -31,8 +32,9 @@ class Game():
         self.score_xpath = '/html/body/div/div[1]/div/div[1]'
         self.restart_xpath = '/html/body/div/div[2]/a'
 
+        self.cost = 0
         self.last_score = 0
-        self.game_over_reward = -2048
+        self.game_over_reward = 0
         self.rows = 4
         self.cols = 4
         self.board = [0 for _ in range(16)]
@@ -55,7 +57,7 @@ class Game():
 
         element = self.browser.find_element(By.XPATH, self.score_xpath).text
         current_score = int(element.split('+')[0])
-        reward = current_score - self.last_score
+        reward = current_score - self.last_score - self.cost
         self.last_score = current_score
         return reward
 
@@ -98,20 +100,24 @@ class Game():
 
         return self.state, self.calc_reward(), self.game_over(), skip
 
+    def normalize(self, board):
+
+        n = [0 for _ in range(len(board))]
+        for x in range(len(board)):
+            if board[x] is not 0:
+                n[x] = math.log(board[x], 2)
+            else:
+                n[x] = 0
+
+        return n
+
     def replay(self):
         '''
         Click replay to reset the game
         :return: None
         '''
-        # replay = self.browser.find_element(By.XPATH, self.try_again_xpath)
-        # replay.click()
-
         restart = self.browser.find_element(By.XPATH, self.restart_xpath)
         restart.click()
-
-    def find_board(self, driver):
-        elements = self.browser.find_elements(By.XPATH, self.tile_container_xpath)
-        return elements
 
     def update(self):
         '''
@@ -129,8 +135,9 @@ class Game():
             try:
                 by_spaces = e.get_attribute('class').split(' ')
             except StaleElementReferenceException as e:
+                self.update()
                 print('stale element')
-                return True
+                return False
 
             # total block update
             if len(by_spaces) is 4 and by_spaces[3] == 'tile-merged':
@@ -146,6 +153,7 @@ class Game():
             self.board[index] = num
 
         self.on_board = total_blocks
-        self.state = list(self.board)
+        self.state = self.normalize(self.board)
+        #self.state = list(self.board)
         self.state.append(self.on_board)
         return False
