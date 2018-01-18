@@ -32,7 +32,7 @@ class Game():
         self.score_xpath = '/html/body/div/div[1]/div/div[1]'
         self.restart_xpath = '/html/body/div/div[2]/a'
 
-        self.cost = 0
+        self.cost = 100
         self.last_score = 0
         self.game_over_reward = 0
         self.rows = 4
@@ -71,6 +71,11 @@ class Game():
         if message == 'game-message game-over':
             return True
         return False
+
+    def get_score(self):
+        element = self.browser.find_element(By.XPATH, self.score_xpath).text
+        current_score = int(element.split('+')[0])
+        return current_score
 
     def move(self, direction):
         '''
@@ -155,5 +160,5 @@ class Game():
         self.on_board = total_blocks
         self.state = self.normalize(self.board)
         #self.state = list(self.board)
-        self.state.append(self.on_board)
+        #self.state.append(self.on_board)
         return False

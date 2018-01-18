@@ -3,6 +3,7 @@ import random
 from models.enum.direction import Direction
 from models.Game import Game
 from models.q_learn import Q_Learn
+from sklearn.preprocessing import StandardScaler
 
 game = Game()
 game.update()
@@ -10,6 +11,7 @@ game.update()
 
 def play():
     while(game.game_over() is False):
+
         r = random.randint(1, 4)
 
         if r is 1:
@@ -20,7 +22,7 @@ def play():
             game.move(Direction.DOWN)
         if r is 4:
             game.move(Direction.UP)
-    game.replay()
+    #game.replay()
 
 episodes = 200
 discount = 0.9
