@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.linear_model import SGDRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.externals import joblib
-import tensorflow as tf
 
 class Estimator():
 
@@ -11,12 +10,10 @@ class Estimator():
 
         self.action_space = action_space
 
-        self.x = tf.placeholder('float', [None, len(init_state)])
-
         for _ in range(self.action_space):
 
             model = SGDRegressor(learning_rate='constant')
-            #model = MLPRegressor(hidden_layer_sizes=500)
+            #model = MLPRegressor(hidden_layer_sizes=10)
 
             model.partial_fit([init_state], [0])
             self.models.append(model)

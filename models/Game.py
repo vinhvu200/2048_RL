@@ -18,31 +18,40 @@ class Game():
 
         # IMPORTANT.. Test delay to see if results are being
         # recorded correctly
-        self.delay = 0.015
+        self.delay = 0.05
 
         # state is a list of all the values of each squares
         # and on_board blocks
         self.state = []
 
         self.url = 'https://gabrielecirulli.github.io/2048/'
-        exec_path = '/Users/vinh/Desktop/chromedriver'
+        #exec_path = '/Users/vinh/Desktop/chromedriver'
+        exec_path = '/Users/VinhVu/Desktop/chromedriver'
         self.tile_container_xpath = '/html/body/div/div[4]/div[3]/*'
         self.game_over_xpath = '/html/body/div/div[4]/div[1]'
         self.try_again_xpath = '/html/body/div/div[4]/div[1]/div/a[2]'
         self.score_xpath = '/html/body/div/div[1]/div/div[1]'
         self.restart_xpath = '/html/body/div/div[2]/a'
 
-        self.cost = 100
+        self.board_score = 4
+        self.cost = 1
         self.last_score = 0
-        self.game_over_reward = 0
+        self.game_over_reward = -10
         self.rows = 4
         self.cols = 4
         self.board = [0 for _ in range(16)]
-        self.on_board = 0
+        self.on_board = 2
         self.action_space = 4
 
         self.browser = webdriver.Chrome(executable_path=exec_path)
         self.browser.get(self.url)
+
+    def calc_board_score(self):
+        sum = 0
+        for x in self.board:
+            sum += x
+
+        return sum
 
     def calc_reward(self):
         '''
@@ -52,13 +61,61 @@ class Game():
 
         :return: reward (int)
         '''
-        if self.game_over():
-            return self.game_over_reward
+        # if self.game_over():
+        #     return self.game_over_reward
+        #
+        # element = self.browser.find_element(By.XPATH, self.score_xpath).text
+        # current_score = int(element.split('+')[0])
+        # reward = current_score - self.last_score - self.cost
+        # self.last_score = current_score
+        # return reward * self.corner_reward()
+
+        # if self.game_over():
+        #     return self.game_over_reward
 
         element = self.browser.find_element(By.XPATH, self.score_xpath).text
         current_score = int(element.split('+')[0])
         reward = current_score - self.last_score - self.cost
         self.last_score = current_score
+
+        reward *= (self.corner_reward() * self.board_space_reward())
+        print('reward : {}'.format(reward))
+
+        return reward
+
+    def corner_reward(self):
+        corner_positions = [0, 3, 12, 15]
+        side_positions = [1, 2, 4, 7, 8, 11, 13, 14]
+
+        highest = self.state[0]
+
+        for b in self.state:
+            if b > highest:
+                highest = b
+
+        for c in corner_positions:
+            if self.state[c] == highest:
+                return 3
+
+        # for s in side_positions:
+        #     if self.board[s] == highest:
+        #         return 2
+
+        return 1
+
+    def board_space_reward(self):
+        new_board = 0
+
+        for x in self.state:
+            if x != 0:
+                new_board += 1
+
+        if new_board > self.on_board:
+            reward = -1
+        else:
+            reward = abs(self.on_board - new_board) + 1
+
+        self.on_board = new_board
         return reward
 
     def game_over(self):
@@ -121,6 +178,9 @@ class Game():
         Click replay to reset the game
         :return: None
         '''
+        self.board_score = 4
+        self.last_score = 0
+        self.on_board = 2
         restart = self.browser.find_element(By.XPATH, self.restart_xpath)
         restart.click()
 
@@ -157,7 +217,7 @@ class Game():
             index = (row) * self.rows + (col)
             self.board[index] = num
 
-        self.on_board = total_blocks
+        # self.on_board = total_blocks
         self.state = self.normalize(self.board)
         #self.state = list(self.board)
         #self.state.append(self.on_board)

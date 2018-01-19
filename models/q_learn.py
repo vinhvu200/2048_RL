@@ -21,6 +21,16 @@ class Q_Learn():
                                Direction.LEFT,
                                Direction.RIGHT]
 
+    def alternate(self):
+
+        self.episodes = 5
+        count = 0
+        while True:
+            self.random_play(1)
+            self.learn()
+            count += 1
+            print('Round Finished : {}\n'.format(count))
+
     def calc_running_avg(self, n1, n2, total):
         return (n1 + n2) / total
 
@@ -63,26 +73,22 @@ class Q_Learn():
                 action = self.direction_dict[action_index]
                 next_state, reward, done, skip = self.game.move(action)
 
-                if last_count > 10:
+                if last_count > 1:
                     action_index = random.randint(0, self.game.action_space - 1)
                     action = self.direction_dict[action_index]
                     next_state, reward, done, skip = self.game.move(action)
                     random_count += 1
 
-                # if skip is False and self.compare_states(state, next_state) is True:
-                #     action_index = random.randint(0, self.game.action_space - 1)
-                #     action = self.direction_dict[action_index]
-                #     next_state, reward, done, skip = self.game.move(action)
-
                 if done is True or skip is True:
 
-                    print('Average : {}'.format(self.calc_running_avg(curr_sum, self.game.get_score(), e+1)))
-                    print('Random Moves : {}'.format(random_count))
+                    print('Learn Score : {}'.format(self.game.get_score()))
+                    #print('Average : {}'.format(self.calc_running_avg(curr_sum, self.game.get_score(), e+1)))
+                    #print('Random Moves : {}'.format(random_count))
 
                     if skip is False:
                         print('Saving data')
                         self.estimator.save_data()
-                        print('Episodes complete : {}\nSteps : {}\n'.format(e + 1, t))
+                        #print('Episodes complete : {}\nSteps : {}\n'.format(e + 1, t))
                     else:
                         #self.estimator.load_data()
                         pass
@@ -99,3 +105,39 @@ class Q_Learn():
 
                 last_state = state
                 state = next_state
+
+    def random_play(self, amount):
+        reward = 0
+        count = 0
+        done = False
+
+        while count < amount:
+
+            state = self.game.state
+            while True:
+
+                action_index = random.randint(1, 4)
+
+                if action_index is 1:
+                    next_state, reward, done, skip = self.game.move(Direction.RIGHT)
+                if action_index is 2:
+                    next_state, reward, done, skip = self.game.move(Direction.LEFT)
+                if action_index is 3:
+                    next_state, reward, done, skip = self.game.move(Direction.DOWN)
+                if action_index is 4:
+                    next_state, reward, done, skip = self.game.move(Direction.UP)
+                    # TD Update
+
+                td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
+                self.estimator.update(state, action_index-1, td_target)
+
+                if done is True:
+                    print('Random Score : {}\n'.format(self.game.get_score()))
+                    self.game.replay()
+                    time.sleep(1)
+                    self.game.update()
+                    break
+
+                state = next_state
+
+            count += 1

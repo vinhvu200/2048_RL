@@ -1,4 +1,5 @@
 import random
+import time
 
 from models.enum.direction import Direction
 from models.Game import Game
@@ -24,9 +25,29 @@ def play():
             game.move(Direction.UP)
     #game.replay()
 
-episodes = 200
+def manual():
+    while game.game_over() is False:
+
+        input = raw_input()
+        if input == 'w':
+            next_state, reward, done, skip = game.move(Direction.UP)
+        if input == 'a':
+            next_state, reward, done, skip = game.move(Direction.LEFT)
+        if input == 's':
+            next_state, reward, done, skip = game.move(Direction.DOWN)
+        if input == 'd':
+            next_state, reward, done, skip = game.move(Direction.RIGHT)
+
+        #time.sleep(1)
+        #print(reward)
+
+# manual()
+
+episodes = 1000
 discount = 0.9
 epsilon = 0.0
 
 q = Q_Learn(game, episodes, discount, epsilon)
-q.learn()
+q.alternate()
+# q.random_play(10)
+# q.learn()
