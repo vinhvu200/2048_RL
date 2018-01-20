@@ -13,7 +13,7 @@ class Estimator():
         for _ in range(self.action_space):
 
             model = SGDRegressor(learning_rate='constant')
-            #model = MLPRegressor(hidden_layer_sizes=10)
+            #model = MLPRegressor()
 
             model.partial_fit([init_state], [0])
             self.models.append(model)

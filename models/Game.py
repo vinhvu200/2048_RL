@@ -25,8 +25,8 @@ class Game():
         self.state = []
 
         self.url = 'https://gabrielecirulli.github.io/2048/'
-        #exec_path = '/Users/vinh/Desktop/chromedriver'
-        exec_path = '/Users/VinhVu/Desktop/chromedriver'
+        exec_path = '/Users/vinh/Desktop/chromedriver'
+        #exec_path = '/Users/VinhVu/Desktop/chromedriver'
         self.tile_container_xpath = '/html/body/div/div[4]/div[3]/*'
         self.game_over_xpath = '/html/body/div/div[4]/div[1]'
         self.try_again_xpath = '/html/body/div/div[4]/div[1]/div/a[2]'
@@ -34,9 +34,9 @@ class Game():
         self.restart_xpath = '/html/body/div/div[2]/a'
 
         self.board_score = 4
-        self.cost = 1
+        self.cost = 10
         self.last_score = 0
-        self.game_over_reward = -10
+        self.game_over_reward = -2000
         self.rows = 4
         self.cols = 4
         self.board = [0 for _ in range(16)]
@@ -61,62 +61,28 @@ class Game():
 
         :return: reward (int)
         '''
-        # if self.game_over():
-        #     return self.game_over_reward
-        #
-        # element = self.browser.find_element(By.XPATH, self.score_xpath).text
-        # current_score = int(element.split('+')[0])
-        # reward = current_score - self.last_score - self.cost
-        # self.last_score = current_score
-        # return reward * self.corner_reward()
-
-        # if self.game_over():
-        #     return self.game_over_reward
+        if self.game_over():
+            return self.game_over_reward
 
         element = self.browser.find_element(By.XPATH, self.score_xpath).text
         current_score = int(element.split('+')[0])
         reward = current_score - self.last_score - self.cost
         self.last_score = current_score
-
-        reward *= (self.corner_reward() * self.board_space_reward())
-        print('reward : {}'.format(reward))
-
-        return reward
+        return reward * self.corner_reward() * self.empty_tile_reward()
 
     def corner_reward(self):
         corner_positions = [0, 3, 12, 15]
-        side_positions = [1, 2, 4, 7, 8, 11, 13, 14]
 
         highest = self.state[0]
 
-        for b in self.state:
-            if b > highest:
-                highest = b
-
         for c in corner_positions:
-            if self.state[c] == highest:
-                return 3
+            if self.state[c] > highest:
+                highest = self.state[c]
 
-        # for s in side_positions:
-        #     if self.board[s] == highest:
-        #         return 2
+        return 1 + (highest * 0.25)
 
-        return 1
-
-    def board_space_reward(self):
-        new_board = 0
-
-        for x in self.state:
-            if x != 0:
-                new_board += 1
-
-        if new_board > self.on_board:
-            reward = -1
-        else:
-            reward = abs(self.on_board - new_board) + 1
-
-        self.on_board = new_board
-        return reward
+    def empty_tile_reward(self):
+        return 1 + (len(self.state) - self.on_board) * 0.25
 
     def game_over(self):
         '''
@@ -133,6 +99,9 @@ class Game():
         element = self.browser.find_element(By.XPATH, self.score_xpath).text
         current_score = int(element.split('+')[0])
         return current_score
+
+    def monoticity_reward(self):
+        pass
 
     def move(self, direction):
         '''

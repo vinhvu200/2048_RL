@@ -1,7 +1,7 @@
 from models.estimator import Estimator
 from models.enum.direction import Direction
 
-
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 import time
@@ -23,13 +23,15 @@ class Q_Learn():
 
     def alternate(self):
 
-        self.episodes = 5
+        self.episodes = 10
         count = 0
+        points = []
         while True:
             self.random_play(1)
-            self.learn()
+            points = self.learn(points)
             count += 1
             print('Round Finished : {}\n'.format(count))
+            self.graph(points)
 
     def calc_running_avg(self, n1, n2, total):
         return (n1 + n2) / total
@@ -49,11 +51,21 @@ class Q_Learn():
 
         return probs
 
-    def learn(self):
+    def graph(self, y):
+        x = [(i+1) for i in range(len(y))]
+        fig, ax = plt.subplots()
+        ax.plot(x, y)
+        ax.set(xlabel='Episodes', ylabel='Score',
+               title='Episodes vs Score')
+        ax.grid()
+        fig.savefig('graph/results.png')
+
+    def learn(self, points):
 
         last_state = [0 for _ in range(len(self.game.state))]
         last_count = 0
         curr_sum = 0
+
         for e in range(self.episodes):
 
             state = self.game.state
@@ -73,7 +85,7 @@ class Q_Learn():
                 action = self.direction_dict[action_index]
                 next_state, reward, done, skip = self.game.move(action)
 
-                if last_count > 1:
+                if last_count > 5:
                     action_index = random.randint(0, self.game.action_space - 1)
                     action = self.direction_dict[action_index]
                     next_state, reward, done, skip = self.game.move(action)
@@ -83,7 +95,7 @@ class Q_Learn():
 
                     print('Learn Score : {}'.format(self.game.get_score()))
                     #print('Average : {}'.format(self.calc_running_avg(curr_sum, self.game.get_score(), e+1)))
-                    #print('Random Moves : {}'.format(random_count))
+                    print('Random Moves : {}'.format(random_count))
 
                     if skip is False:
                         print('Saving data')
@@ -93,7 +105,8 @@ class Q_Learn():
                         #self.estimator.load_data()
                         pass
 
-                    curr_sum += self.game.get_score()
+                    points.append(self.game.get_score())
+                    #curr_sum += self.game.get_score()
                     self.game.replay()
                     time.sleep(1)
                     self.game.update()
@@ -105,6 +118,8 @@ class Q_Learn():
 
                 last_state = state
                 state = next_state
+
+        return points
 
     def random_play(self, amount):
         reward = 0
