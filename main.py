@@ -16,13 +16,13 @@ def play():
         r = random.randint(1, 4)
 
         if r is 1:
-            game.move(Direction.RIGHT)
+            next_state, _, _, _ = game.move(Direction.RIGHT)
         if r is 2:
-            game.move(Direction.LEFT)
+            next_state, _, _, _ = game.move(Direction.LEFT)
         if r is 3:
-            game.move(Direction.DOWN)
+            next_state, _, _, _ = game.move(Direction.DOWN)
         if r is 4:
-            game.move(Direction.UP)
+            next_state, _, _, _ = game.move(Direction.UP)
     #game.replay()
 
 def manual():
@@ -38,16 +38,17 @@ def manual():
         if input == 'd':
             next_state, reward, done, skip = game.move(Direction.RIGHT)
 
-        #time.sleep(1)
-        #print(reward)
+        q.featurize_state(next_state)
 
-# manual()
+#manual()
 
 episodes = 1000
 discount = 0.9
 epsilon = 0.0
 
 q = Q_Learn(game, episodes, discount, epsilon)
+q.fit_scaler_featurizer()
 q.alternate()
+
 # q.random_play(10)
 # q.learn()

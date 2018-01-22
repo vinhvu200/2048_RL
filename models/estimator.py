@@ -28,7 +28,6 @@ class Estimator():
     def predict(self, state):
 
         q_vals = np.ones(self.action_space)
-
         for i in range(len(self.models)):
             q_vals[i] = self.models[i].predict([state])[0]
 

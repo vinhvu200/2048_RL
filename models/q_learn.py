@@ -1,20 +1,30 @@
 from models.estimator import Estimator
 from models.enum.direction import Direction
+from sklearn.kernel_approximation import RBFSampler
 
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 import time
+import sklearn.pipeline
+import sklearn.preprocessing
 
 class Q_Learn():
 
     def __init__(self, game, episodes, discount, epsilon):
+
         self.game = game
         self.episodes = episodes
         self.discount = discount
         self.epsilon = epsilon
-        self.estimator = Estimator(self.game.action_space,
-                                   self.game.state)
+        self.featurizer = sklearn.pipeline.FeatureUnion([
+        ("rbf1", RBFSampler(gamma=5.0, n_components=100)),
+        ("rbf2", RBFSampler(gamma=2.0, n_components=100)),
+        ("rbf3", RBFSampler(gamma=1.0, n_components=100)),
+        ("rbf4", RBFSampler(gamma=0.5, n_components=100))
+        ])
+        self.scaler = sklearn.preprocessing.StandardScaler()
+        self.estimator = None
         #self.estimator.load_data()
         self.direction_dict = [Direction.UP,
                                Direction.DOWN,
@@ -27,7 +37,7 @@ class Q_Learn():
         count = 0
         points = []
         while True:
-            self.random_play(1)
+            #self.random_play(1)
             points = self.learn(points)
             count += 1
             print('Round Finished : {}\n'.format(count))
@@ -45,11 +55,50 @@ class Q_Learn():
     def epsilon_greedy_policy(self, state):
 
         probs = np.ones(self.game.action_space, dtype=float) * self.epsilon / self.game.action_space
-        q_vals = self.estimator.predict(state)
+        f_state = self.featurize_state(state)
+        q_vals = self.estimator.predict(f_state)
         best_action = np.argmax(q_vals)
         probs[best_action] += (1.0 - self.epsilon)
 
         return probs
+
+    def featurize_state(self, state):
+        scaled = self.scaler.transform([state])
+        featurized = self.featurizer.transform(scaled)
+        return featurized[0]
+
+    def fit_scaler_featurizer(self):
+
+        ep = 1
+        states = []
+        for i in range(ep):
+
+            state = self.game.state
+            while True:
+
+                states.append(state)
+                m = random.randint(0, 3)
+                if m == 0:
+                    next_state, reward, done, _ = self.game.move(Direction.UP)
+                elif m == 1:
+                    next_state, reward, done, _ = self.game.move(Direction.DOWN)
+                elif m == 2:
+                    next_state, reward, done, _ = self.game.move(Direction.LEFT)
+                else:
+                    next_state, reward, done, _ = self.game.move(Direction.RIGHT)
+
+                if done is True:
+                    self.game.replay()
+                    self.game.update()
+                    time.sleep(1)
+                    break
+
+        obs_examples = np.array(states)
+        self.scaler.fit(obs_examples)
+        self.featurizer.fit(self.scaler.transform(obs_examples))
+        self.estimator = Estimator(self.game.action_space,
+                                   self.featurize_state(self.game.state))
+        print('Estimator Built')
 
     def graph(self, y):
         x = [(i+1) for i in range(len(y))]
@@ -113,8 +162,11 @@ class Q_Learn():
                     break
 
                 # TD Update
-                td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
-                self.estimator.update(state, action_index, td_target)
+                f_state = self.featurize_state(next_state)
+                td_target = reward + self.discount * np.amax(self.estimator.predict(f_state))
+                self.estimator.update(f_state, action_index, td_target)
+                # td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
+                # self.estimator.update(state, action_index, td_target)
 
                 last_state = state
                 state = next_state

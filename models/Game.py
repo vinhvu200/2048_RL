@@ -1,5 +1,6 @@
 import time
 import math
+import numpy as np
 
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -68,7 +69,8 @@ class Game():
         current_score = int(element.split('+')[0])
         reward = current_score - self.last_score - self.cost
         self.last_score = current_score
-        return reward * self.corner_reward() * self.empty_tile_reward()
+        #return reward * self.corner_reward() * self.empty_tile_reward()
+        return reward
 
     def corner_reward(self):
         corner_positions = [0, 3, 12, 15]
@@ -100,8 +102,6 @@ class Game():
         current_score = int(element.split('+')[0])
         return current_score
 
-    def monoticity_reward(self):
-        pass
 
     def move(self, direction):
         '''
