@@ -84,7 +84,7 @@ class Game():
         return 1 + (highest * 0.25)
 
     def empty_tile_reward(self):
-        return 1 + (len(self.state) - self.on_board) * 0.25
+        return 1 + (len(self.state) - self.on_board) * 0.2
 
     def game_over(self):
         '''

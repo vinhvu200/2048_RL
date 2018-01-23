@@ -33,11 +33,17 @@ class Q_Learn():
 
     def alternate(self):
 
+        rand_flag = True
         self.episodes = 10
         count = 0
         points = []
         while True:
-            #self.random_play(1)
+
+            if rand_flag is True:
+                self.random_play(100)
+                print('Finished random gameplay')
+                rand_flag = False
+
             points = self.learn(points)
             count += 1
             print('Round Finished : {}\n'.format(count))
@@ -69,7 +75,7 @@ class Q_Learn():
 
     def fit_scaler_featurizer(self):
 
-        ep = 1
+        ep = 5
         states = []
         for i in range(ep):
 
@@ -162,8 +168,9 @@ class Q_Learn():
                     break
 
                 # TD Update
-                f_state = self.featurize_state(next_state)
-                td_target = reward + self.discount * np.amax(self.estimator.predict(f_state))
+                f_next_state = self.featurize_state(next_state)
+                f_state = self.featurize_state(state)
+                td_target = reward + self.discount * np.amax(self.estimator.predict(f_next_state))
                 self.estimator.update(f_state, action_index, td_target)
                 # td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
                 # self.estimator.update(state, action_index, td_target)
@@ -193,10 +200,16 @@ class Q_Learn():
                     next_state, reward, done, skip = self.game.move(Direction.DOWN)
                 if action_index is 4:
                     next_state, reward, done, skip = self.game.move(Direction.UP)
-                    # TD Update
 
-                td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
-                self.estimator.update(state, action_index-1, td_target)
+                # TD Update
+                f_state = self.featurize_state(state)
+                f_next_state = self.featurize_state(next_state)
+
+                td_target = reward + self.discount * np.amax(self.estimator.predict(f_next_state))
+                self.estimator.update(f_state, action_index-1, td_target)
+
+                # td_target = reward + self.discount * np.amax(self.estimator.predict(next_state))
+                # self.estimator.update(state, action_index-1, td_target)
 
                 if done is True:
                     print('Random Score : {}\n'.format(self.game.get_score()))
