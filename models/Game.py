@@ -19,7 +19,7 @@ class Game():
 
         # IMPORTANT.. Test delay to see if results are being
         # recorded correctly
-        self.delay = 0.05
+        self.delay = 0.1
 
         # state is a list of all the values of each squares
         # and on_board blocks
@@ -37,12 +37,13 @@ class Game():
         self.board_score = 4
         self.cost = 10
         self.last_score = 0
-        self.game_over_reward = -2000
+        self.game_over_reward = -30
         self.rows = 4
         self.cols = 4
         self.board = [0 for _ in range(16)]
         self.on_board = 2
         self.action_space = 4
+        self.highest = 1
 
         self.browser = webdriver.Chrome(executable_path=exec_path)
         self.browser.get(self.url)
@@ -65,11 +66,19 @@ class Game():
         if self.game_over():
             return self.game_over_reward
 
-        element = self.browser.find_element(By.XPATH, self.score_xpath).text
-        current_score = int(element.split('+')[0])
-        reward = current_score - self.last_score - self.cost
-        self.last_score = current_score
-        #return reward * self.corner_reward() * self.empty_tile_reward()
+        current_highest = self.highest_tile()
+        if current_highest > self.highest:
+            self.highest = current_highest
+            print('Reward')
+            reward = 10
+        else:
+            reward = -0.1
+
+        # element = self.browser.find_element(By.XPATH, self.score_xpath).text
+        # current_score = int(element.split('+')[0])
+        # reward = current_score - self.last_score - self.cost
+        # self.last_score = current_score
+
         return reward
 
     def corner_reward(self):
@@ -102,6 +111,13 @@ class Game():
         current_score = int(element.split('+')[0])
         return current_score
 
+    def highest_tile(self):
+        highest = self.state[0]
+        for x in self.state:
+            if x > highest:
+                highest = x
+
+        return highest
 
     def move(self, direction):
         '''
@@ -150,6 +166,7 @@ class Game():
         self.board_score = 4
         self.last_score = 0
         self.on_board = 2
+        self.highest = 1
         restart = self.browser.find_element(By.XPATH, self.restart_xpath)
         restart.click()
 

@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 game = Game()
 game.update()
-
+game.highest = game.highest_tile()
 
 def play():
     while(game.game_over() is False):
@@ -28,6 +28,7 @@ def play():
 def manual():
     while game.game_over() is False:
 
+        print('State : {}'.format(game.state))
         input = raw_input()
         if input == 'w':
             next_state, reward, done, skip = game.move(Direction.UP)
@@ -38,9 +39,11 @@ def manual():
         if input == 'd':
             next_state, reward, done, skip = game.move(Direction.RIGHT)
 
+        print('next state : {}'.format(next_state))
+        print('Reward : {}'.format(reward))
         q.featurize_state(next_state)
 
-#manual()
+# manual()
 
 episodes = 1000
 discount = 0.9

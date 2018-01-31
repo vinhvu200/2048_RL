@@ -33,16 +33,12 @@ class Q_Learn():
 
     def alternate(self):
 
-        rand_flag = True
         self.episodes = 10
         count = 0
         points = []
         while True:
 
-            if rand_flag is True:
-                self.random_play(100)
-                print('Finished random gameplay')
-                rand_flag = False
+            self.random_play(2)
 
             points = self.learn(points)
             count += 1
@@ -165,6 +161,8 @@ class Q_Learn():
                     self.game.replay()
                     time.sleep(1)
                     self.game.update()
+                    self.game.highest = self.game.highest_tile()
+                    print('-----------')
                     break
 
                 # TD Update
@@ -216,6 +214,8 @@ class Q_Learn():
                     self.game.replay()
                     time.sleep(1)
                     self.game.update()
+                    self.game.highest = self.game.highest_tile()
+                    print('-----------')
                     break
 
                 state = next_state
